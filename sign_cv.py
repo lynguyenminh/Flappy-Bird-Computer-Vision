@@ -7,6 +7,8 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
+stop_sign = False
+
 
 class shoulder:
     def __init__(self, left_shoulder, right_shoulder):
@@ -29,7 +31,7 @@ def compare(shoulder, left_hand, right_hand):
     return left_sign or right_sign
 
 def handle_sign():
-    
+    global stop_sign
     cap = cv2.VideoCapture(0)
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
         while cap.isOpened():
@@ -69,6 +71,7 @@ def handle_sign():
 
 
                 status = compare(shoulder_info, left_hand_info, right_hand_info)
+                print(status, stop_sign)
                 yield status
             except:
                 pass
@@ -84,7 +87,7 @@ def handle_sign():
                     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
             # Flip the image horizontally for a selfie-view display.
             cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q') or stop_sign:
                     break
     cap.release()
 
@@ -93,4 +96,5 @@ def handle_sign():
 if __name__=="__main__":
     for i in handle_sign():
         print(i)
-        break
+
+

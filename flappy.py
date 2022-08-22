@@ -2,6 +2,7 @@ from webbrowser import get
 import pygame, random, time
 from pygame.locals import *
 from sign_cv import handle_sign
+import sign_cv
 import threading
 from threading import Thread
 import ctypes
@@ -112,7 +113,6 @@ class Ground(pygame.sprite.Sprite):
 
 
 
-
 def is_off_screen(sprite):
     return sprite.rect[0] < -(sprite.rect[2])
 
@@ -124,13 +124,14 @@ def get_random_pipes(xpos):
 
 def get_event():
     global status
-    global begin
     for i in handle_sign():
         if i:
             status = True
         else: 
             status = False
 
+def change_flag():
+    sign_cv.stop_sign = True
 
 def start_game():
     global begin
@@ -222,6 +223,34 @@ def playing_game():
             break
 
 
+
+
+class my_thread(Thread):
+    def __init__(self, name_function):
+        Thread.__init__(self)
+        self.name_function = name_function
+
+    def run(self):
+        if self.name_function == 'change_flag':
+            change_flag()
+        elif self.name_function == 'get_event':
+            get_event()
+
+    def get_id(self):
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+  
+    def raise_exception(self):
+        thread_id = self.get_id()
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print('Exception raise failure')
+
+
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
 pygame.display.set_caption('Flappy Bird')
@@ -251,10 +280,10 @@ if __name__=="__main__":
     clock = pygame.time.Clock()
 
     # start pose detection
-    t1 = threading.Thread(target=get_event)
-    t1.start()
-    # t1 = my_thread()
+    # t1 = threading.Thread(target=get_event)
     # t1.start()
+    t1 = my_thread('get_event')
+    t1.start()
 
     print('FLAPPY BIRD GAME')
     print('TO START GAME, PLEASE FLAPPING WING')
@@ -264,7 +293,14 @@ if __name__=="__main__":
     # start play game
     playing_game()
 
+    print('end game')
     # tat game
     # t1.raise_exception()
+    # stop_sign = True
+    t2 = my_thread('change_flag')
+    t2.start()
 
+
+    print(sign_cv.stop_sign)
     t1.join()
+    t2.join()

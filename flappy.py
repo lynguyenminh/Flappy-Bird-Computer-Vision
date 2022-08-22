@@ -1,4 +1,3 @@
-from webbrowser import get
 import pygame, random, time
 from pygame.locals import *
 from sign_cv import handle_sign
@@ -6,21 +5,30 @@ import sign_cv
 import threading
 from threading import Thread
 import ctypes
+import json
+
+
+from object_game import Bird, Ground, Pipe
+
+
+f = open('config.json')
+data = json.load(f)
+f.close()
 
 #VARIABLES
-SCREEN_WIDHT = 400
-SCREEN_HEIGHT = 600
-SPEED = 10 # speed bird
-GRAVITY = 1.3
-GAME_SPEED = 5 # speed race
+SCREEN_WIDHT = data.get('SCREEN_WIDHT')
+SCREEN_HEIGHT = data.get('SCREEN_HEIGHT')
+SPEED = data.get('SPEED') # speed bird
+GRAVITY = data.get('GRAVITY')
+GAME_SPEED = data.get('GAME_SPEED') # speed race
 
 GROUND_WIDHT = 2 * SCREEN_WIDHT
-GROUND_HEIGHT= 100
+GROUND_HEIGHT= data.get('GROUND_HEIGHT')
 
-PIPE_WIDHT = 80
-PIPE_HEIGHT = 500
+PIPE_WIDHT = data.get('PIPE_WIDHT')
+PIPE_HEIGHT = data.get('PIPE_HEIGHT')
 
-PIPE_GAP = 150
+PIPE_GAP = data.get('PIPE_GAP')
 
 status = False # sign from pose
 begin = True # sign from game
@@ -28,93 +36,10 @@ begin = True # sign from game
 wing = 'assets/audio/wing.wav'
 hit = 'assets/audio/hit.wav'
 
-pygame.mixer.init()
-
-
-class Bird(pygame.sprite.Sprite):
-
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-
-        self.images =  [pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-midflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-downflap.png').convert_alpha()]
-
-        self.speed = SPEED
-
-        self.current_image = 0
-        self.image = pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha()
-        self.mask = pygame.mask.from_surface(self.image)
-
-        self.rect = self.image.get_rect()
-        self.rect[0] = SCREEN_WIDHT / 6
-        self.rect[1] = SCREEN_HEIGHT / 2
-
-    def update(self):
-        self.current_image = (self.current_image + 1) % 3
-        self.image = self.images[self.current_image]
-        self.speed += GRAVITY
-
-        #UPDATE HEIGHT
-        self.rect[1] += self.speed
-
-    def bump(self):
-        self.speed = -SPEED
-
-    def begin(self):
-        self.current_image = (self.current_image + 1) % 3
-        self.image = self.images[self.current_image]
-
-
-
-
-class Pipe(pygame.sprite.Sprite):
-
-    def __init__(self, inverted, xpos, ysize):
-        pygame.sprite.Sprite.__init__(self)
-
-        self. image = pygame.image.load('assets/sprites/pipe-green.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (PIPE_WIDHT, PIPE_HEIGHT))
-
-
-        self.rect = self.image.get_rect()
-        self.rect[0] = xpos
-
-        if inverted:
-            self.image = pygame.transform.flip(self.image, False, True)
-            self.rect[1] = - (self.rect[3] - ysize)
-        else:
-            self.rect[1] = SCREEN_HEIGHT - ysize
-
-
-        self.mask = pygame.mask.from_surface(self.image)
-
-
-    def update(self):
-        self.rect[0] -= GAME_SPEED
-
-        
-
-class Ground(pygame.sprite.Sprite):
-    
-    def __init__(self, xpos):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('assets/sprites/base.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (GROUND_WIDHT, GROUND_HEIGHT))
-
-        self.mask = pygame.mask.from_surface(self.image)
-
-        self.rect = self.image.get_rect()
-        self.rect[0] = xpos
-        self.rect[1] = SCREEN_HEIGHT - GROUND_HEIGHT
-    def update(self):
-        self.rect[0] -= GAME_SPEED
-
-
-
 
 def is_off_screen(sprite):
     return sprite.rect[0] < -(sprite.rect[2])
+
 
 def get_random_pipes(xpos):
     size = random.randint(100, 300)
@@ -122,31 +47,11 @@ def get_random_pipes(xpos):
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
     return pipe, pipe_inverted
 
-def get_event():
-    global status
-    for i in handle_sign():
-        if i:
-            status = True
-        else: 
-            status = False
-
-def change_flag():
-    sign_cv.stop_sign = True
 
 def start_game():
     global begin
     while begin:
         clock.tick(15)
-        # using keyboard to start game
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-            if event.type == KEYDOWN:
-                if event.key == K_SPACE or event.key == K_UP:
-                    bird.bump()
-                    pygame.mixer.music.load(wing)
-                    pygame.mixer.music.play()
-                    begin = False
 
         # flapping wings to start game
         if status:
@@ -172,18 +77,11 @@ def start_game():
 
         pygame.display.update()
 
+
 def playing_game():
     while True:
         clock.tick(15)
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-            if event.type == KEYDOWN:
-                if event.key == K_SPACE or event.key == K_UP:
-                    bird.bump()
-                    pygame.mixer.music.load(wing)
-                    pygame.mixer.music.play()
-        
+        # control bird       
         if status:
             bird.bump()
             pygame.mixer.music.load(wing)
@@ -223,8 +121,6 @@ def playing_game():
             break
 
 
-
-
 class my_thread(Thread):
     def __init__(self, name_function):
         Thread.__init__(self)
@@ -251,6 +147,20 @@ class my_thread(Thread):
             print('Exception raise failure')
 
 
+def get_event():
+    global status
+    for i in handle_sign():
+        if i:
+            status = True
+        else: 
+            status = False
+
+
+def change_flag():
+    sign_cv.stop_sign = True
+
+
+pygame.mixer.init()
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
 pygame.display.set_caption('Flappy Bird')
@@ -280,27 +190,22 @@ if __name__=="__main__":
     clock = pygame.time.Clock()
 
     # start pose detection
-    # t1 = threading.Thread(target=get_event)
-    # t1.start()
     t1 = my_thread('get_event')
     t1.start()
 
     print('FLAPPY BIRD GAME')
     print('TO START GAME, PLEASE FLAPPING WING')
+
     # click (flapping wings) to start game
     start_game()
 
     # start play game
     playing_game()
 
-    print('end game')
-    # tat game
-    # t1.raise_exception()
-    # stop_sign = True
+    # stop pose detect
     t2 = my_thread('change_flag')
     t2.start()
 
 
-    print(sign_cv.stop_sign)
     t1.join()
     t2.join()

@@ -1,6 +1,5 @@
 import cv2
 import mediapipe as mp
-import numpy as np
 
 
 mp_drawing = mp.solutions.drawing_utils
@@ -71,7 +70,6 @@ def handle_sign():
 
 
                 status = compare(shoulder_info, left_hand_info, right_hand_info)
-                print(status, stop_sign)
                 yield status
             except:
                 pass

@@ -1,0 +1,11 @@
+{
+  "SCREEN_WIDHT" : 400,
+  "SCREEN_HEIGHT" : 600,
+  "SPEED" : 10,
+  "GRAVITY" : 1.3,
+  "GAME_SPEED" : 5,
+  "GROUND_HEIGHT" : 100,
+  "PIPE_WIDHT" : 80,
+  "PIPE_HEIGHT" : 500,
+  "PIPE_GAP" : 150
+  }

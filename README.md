@@ -21,3 +21,9 @@ To run this game, run:
 ```
 python3 flappy.py 
 ```
+## Reference: 
+[1]. https://github.com/LeonMarqs/Flappy-bird-python
+
+[2]. https://google.github.io/mediapipe/solutions/pose#python-solution-api
+
+[3]. https://github.com/dongdv95/hand-gesture-recognition

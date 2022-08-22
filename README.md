@@ -13,7 +13,7 @@ Now, let's install this game:
 ```
 git clone https://github.com/lynguyenminh/Flappy-Bird-Computer-Vision.git
 cd Flappy-Bird-Computer-Vision
-virtualenv venv & source venv/bin/activate
+virtualenv venv && source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
